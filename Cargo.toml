@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 rocket = "0.5.0"
 paho-mqtt = "0.12"
+rusqlite  = "0.29.0"
