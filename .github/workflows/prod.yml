@@ -1,0 +1,32 @@
+name: Build, Test and Deplay to Prod
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  SQLX_OFFLINE: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+  steps:
+  - name: Checkout code
+    uses: actions/checkout@v2
+  
+  - name: Install Rust
+    uses: actions-rs/toolchain@v1
+    with:
+      profile: minimal
+      toolchain: stable
+
+  - name: Build and Test Code
+    run: |
+      cargo build --verbose
+      cargo test --verbose
+
+  - name: Set up Docker Buildx
+    uses: docker/setup-buildx-action@v2
+    

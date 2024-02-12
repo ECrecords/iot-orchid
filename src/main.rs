@@ -1,16 +1,13 @@
 #[macro_use]
 extern crate rocket;
 
+mod ping;
 
 
 use paho_mqtt as mqtt;
 use std::collections::HashSet;
 use std::sync::Arc;
 use std::process;
-
-#[allow(unused_imports)]
-use rusqlite::{Connection, Result};
-
 use rocket::tokio::{
     sync,
     time
@@ -38,61 +35,40 @@ fn device_details(uid: &str) -> String {
     uid.to_string()
 }
 
-#[post("/register/<device_token>")]
-async fn register_device(
-    device_token: &str,
+/// Add a device to a cluster
+/// 
+/// # Arguments
+/// 
+/// * `cluster_id` - The unique identifier of the cluster
+/// * `device_id` - The unique identifier of the device
+/// * `mqtt_client` - The shared MQTT client
+/// * `registered` - The shared set of registered topics
+/// 
+#[post("/clusters/<cluster_id>/devices/<device_id>")]
+async fn add_device_to_cluster(
+    cluster_id: &str,
+    device_id: &str,
     mqtt_client: &rocket::State<SharedMQTTClient>,
-    registered: &rocket::State<SharedRegisteredTopics>,
 ) {
     let cli = mqtt_client.lock().await;
     let mut reg_lock = registered.lock().await;
 
-    // is device is marked as registered?
-    if reg_lock.get(device_token).is_some() {
-        
-        let ( tx, mut rx) = sync::mpsc::channel(1);
-        // TODO REPLACE WITH ACTUAL SERVER ID
-        let response_topic = format!("ping/reponse/{}/{}", device_token, "SERVER_ID");
-        let ping_topic = format!("ping/{}/{}", "SERVER_ID", device_token);
-        
-        // TODO add a timeout to the subscribe await
-        if let Ok(_) = cli.subscribe(&response_topic, mqtt::QOS_1).await {
-            
-            cli.set_message_callback(move |_, msg| {
-                if let Some(message) = msg {
-                    if message.topic() == response_topic {
-                        let _ = tx.send(message);
-                    }
-                }
-            });
-
-            let msg = mqtt::MessageBuilder::new()
-                .topic(ping_topic)
-                .finalize();
-
-            cli.publish(msg);
-
-            match time::timeout(time::Duration::from_secs(10), rx.recv()).await {
-                Ok(_) => {
-                    
-                },
-                Err(_) => {}
-            }
-
-
-
-        }
+    let topic = format!("cluster/{}/device/{}", cluster_id, device_id);
+    if let Ok(_) = cli.subscribe(&topic, mqtt::QOS_1).await {
+        reg_lock.insert(topic);
     }
-
 }
+
+
+mod orchid_mqtt;
 
 #[launch]
 fn rocket() -> _ {
+    
     let create_opts = mqtt::CreateOptionsBuilder::new()
         .server_uri("tcp://192.168.0.159:1883")
         .client_id("Mosquitto Broker")
         .finalize();
-
     let cli = mqtt::AsyncClient::new(create_opts).expect("Error creating MQTT client.");
 
     let broker_connect_config = mqtt::ConnectOptionsBuilder::new()
@@ -109,13 +85,23 @@ fn rocket() -> _ {
         }
     };
 
+    cli.set_message_callback(orchid_mqtt::create_closure());
+    // register to all topics in orchid_mqtt Topic enum
+    for topic in orchid_mqtt::Topic::all() {
+        let topic = format!("{}/#", topic.to_string());
+        println!("Subscribing to {}", topic);
+        cli.subscribe(topic, mqtt::QOS_1);
+    }
+
+    cli.subscribe("cluster/us-1/+/device/+", mqtt::QOS_0);
+
     let mqtt_client = Arc::new(sync::Mutex::new(cli));
 
     let registered: Arc<sync::Mutex<HashSet<String>>> =
         Arc::new(sync::Mutex::new(HashSet::new()));
 
     rocket::build()
-        .mount("/", routes![index, register_device])
+        .mount("/api/v1/", routes![index,  device_details])
         .manage(mqtt_client)
-        .manage(registered)
+    
 }
