@@ -1,107 +1,72 @@
-#[macro_use]
-extern crate rocket;
+use axum::{extract::{self, Path}, Json, Router};
 
-mod ping;
-
-
-use paho_mqtt as mqtt;
-use std::collections::HashSet;
-use std::sync::Arc;
-use std::process;
-use rocket::tokio::{
-    sync,
-    time
+use axum::routing::{
+    get,
+    post
 };
 
-#[allow(unused_imports)]
-use rocket::response;
-
-#[allow(unused_imports)]
-use rocket::http;
+use serde::{Deserialize, Serialize};
 
 
-type SharedMQTTClient = Arc<sync::Mutex<mqtt::AsyncClient>>;
-type SharedRegisteredTopics = Arc<sync::Mutex<HashSet<String>>>;
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
-}
-
-#[get("/info/<uid>")]
-fn device_details(uid: &str) -> String {
-    let test = format!("{}", uid);
-    println!("{}", test);
-
-    uid.to_string()
-}
-
-/// Add a device to a cluster
-/// 
-/// # Arguments
-/// 
-/// * `cluster_id` - The unique identifier of the cluster
-/// * `device_id` - The unique identifier of the device
-/// * `mqtt_client` - The shared MQTT client
-/// * `registered` - The shared set of registered topics
-/// 
-#[post("/clusters/<cluster_id>/devices/<device_id>")]
-async fn add_device_to_cluster(
-    cluster_id: &str,
-    device_id: &str,
-    mqtt_client: &rocket::State<SharedMQTTClient>,
-) {
-    let cli = mqtt_client.lock().await;
-    let mut reg_lock = registered.lock().await;
-
-    let topic = format!("cluster/{}/device/{}", cluster_id, device_id);
-    if let Ok(_) = cli.subscribe(&topic, mqtt::QOS_1).await {
-        reg_lock.insert(topic);
-    }
+async fn get_clusters() -> String {
+    return String::from("List of clusters");
 }
 
 
-mod orchid_mqtt;
+async fn get_devices(Path(cluster_id): Path<String>) -> String {
+    format!("List of devices in cluster {}", cluster_id)
+}
 
-#[launch]
-fn rocket() -> _ {
-    
-    let create_opts = mqtt::CreateOptionsBuilder::new()
-        .server_uri("tcp://192.168.0.159:1883")
-        .client_id("Mosquitto Broker")
-        .finalize();
-    let cli = mqtt::AsyncClient::new(create_opts).expect("Error creating MQTT client.");
+#[derive(Serialize)]
+struct DeviceInfo {
+    token: String,
+    cluster_id: String,
+    topics: Vec<String>
+}
 
-    let broker_connect_config = mqtt::ConnectOptionsBuilder::new()
-        .connect_timeout(time::Duration::new(10, 0))
-        .finalize();
+// two path arguments cluster_id and device_token
+async fn get_devices_info(Path((cluster_id, device_token)): Path<(String, String)>) -> Json<DeviceInfo> {
+    Json(DeviceInfo {
+        token: device_token,
+        cluster_id,
+        topics: vec!["topic-1".to_string(), "topic-2".to_string()]
+    })
+}
 
-    let tok = cli.connect(broker_connect_config);
+#[derive(Deserialize)]
+struct CreateCluster {
+    id: String,
+    region: String,
+}
 
-    match tok.wait() {
-        Ok(response) => response,
-        Err(error) => {
-            eprintln!("Failed to connect to MQTT broker because {}", error);
-            process::exit(-1);
-        }
-    };
+#[derive(Serialize)]
+struct Cluster {
+    id: String,
+    region: String,
+}
 
-    cli.set_message_callback(orchid_mqtt::create_closure());
-    // register to all topics in orchid_mqtt Topic enum
-    for topic in orchid_mqtt::Topic::all() {
-        let topic = format!("{}/#", topic.to_string());
-        println!("Subscribing to {}", topic);
-        cli.subscribe(topic, mqtt::QOS_1);
-    }
+async fn create_cluster(extract::Json(payload): extract::Json<CreateCluster>) -> Json<Cluster> {
+    Json(Cluster {
+        id: payload.id,
+        region: payload.region,
+    })
 
-    cli.subscribe("cluster/us-1/+/device/+", mqtt::QOS_0);
+}
 
-    let mqtt_client = Arc::new(sync::Mutex::new(cli));
+#[tokio::main]
+async fn main() {
+    // build our application with a single route
 
-    let registered: Arc<sync::Mutex<HashSet<String>>> =
-        Arc::new(sync::Mutex::new(HashSet::new()));
+    let api_routes = Router::new()
+        .route("/", get(|| async { "Hello, World!" }))
+        .route("/clusters", get(get_clusters))
+        .route("/clusters", post(create_cluster))
+        .route("/clusters/:id/devices", get(get_devices))
+        .route("/clusters/:id/devices/:token", get(get_devices_info));
 
-    rocket::build()
-        .mount("/api/v1/", routes![index,  device_details])
-        .manage(mqtt_client)
-    
+    let app = Router::new().nest("/api", api_routes);
+
+    // run our app with hyper, listening globally on port 3000
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
