@@ -3,10 +3,10 @@ use axum::{
     Extension, Json, Router,
 };
 
-use axum::routing::{delete, get, post, put};
+use axum::routing::{get, post};
 
 use serde::{Deserialize, Serialize};
-use sqlx::{pool, postgres::PgPoolOptions, query, Pool, Postgres, Row};
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres, Row};
 
 #[derive(Serialize)]
 struct ClustersResponse {
@@ -66,28 +66,70 @@ struct Cluster {
     region: String,
 }
 
-async fn create_cluster(extract::Json(payload): extract::Json<CreateCluster>) -> Json<Cluster> {
-    Json(Cluster {
-        id: payload.id,
-        region: payload.region,
-    })
+async fn create_cluster(
+    state: Extension<Pool<Postgres>>,
+    extract::Json(cluster): extract::Json<CreateCluster>,
+) -> Result<Json<Cluster>, Json<Cluster>> {
+    let Extension(pool) = state;
+    let query =
+        sqlx::query("INSERT INTO clusters (id, region) VALUES ($1, $2) RETURNING id, region")
+            .bind(&cluster.id)
+            .bind(&cluster.region)
+            .fetch_optional(&pool)
+            .await;
 
+    match query {
+        Ok(query) => {
+            let query = query.unwrap();
+
+            Ok(Json(Cluster {
+                id: query.get(0),
+                region: query.get(1),
+            }))
+        }
+        Err(_) => Err(Json(Cluster {
+            id: "error".to_string(),
+            region: "error".to_string(),
+        })),
+    }
 }
 
 #[tokio::main]
 async fn main() {
-    // build our application with a single route
+    dotenv::dotenv().ok();
 
-    let api_routes = Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
-        .route("/clusters", get(get_clusters))
-        .route("/clusters", post(create_cluster))
-        .route("/clusters/:id/devices", get(get_devices))
-        .route("/clusters/:id/devices/:token", get(get_devices_info));
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
 
-    let app = Router::new().nest("/api", api_routes);
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&url)
+        .await
+        .unwrap_or_else(|_| panic!("Failed to create Postgres connection pool! URL: {}", url));
+
+    match sqlx::migrate!("./migrations").run(&pool).await {
+        Ok(_) => println!("Migrations ran successfully"),
+        Err(e) => println!("Migrations failed: {}", e),
+    }
+
+    let app = Router::new()
+        .nest("/api", app().await)
+        .layer(Extension(pool))
+        .into_make_service();
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+
+    match axum::serve(listener, app).await {
+        Ok(_) => println!("Server started successfully"),
+        Err(e) => println!("Server failed: {}", e),
+    };
+}
+
+async fn app() -> Router {
+    Router::new()
+        .route("/", get(|| async { "Hello, World!" }))
+        .route("/clusters", get(get_clusters))
+        .route("/cluster", post(create_cluster))
+        .route("/clusters/:id/devices", get(get_devices))
+        .route("/clusters/:id/devices/:token", get(get_devices_info))
 }

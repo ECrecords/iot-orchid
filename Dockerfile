@@ -1,6 +1,6 @@
 FROM clux/muslrust:stable AS builder
 
-# Set up environment to ensure SQLx can operate in offline mode
+# # Set up environment to ensure SQLx can operate in offline mode
 ENV SQLX_OFFLINE=true
 
 WORKDIR /usr/src/iot-orchid
@@ -23,4 +23,4 @@ COPY --from=builder /usr/src/iot-orchid/target/x86_64-unknown-linux-musl/release
 ENTRYPOINT ["/iot-orchid"]
 
 # Expose the port the application listens on
-EXPOSE 8000
+EXPOSE 3000

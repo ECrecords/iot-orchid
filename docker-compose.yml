@@ -2,19 +2,20 @@ version: '3'
 services:
   api:
     image: ecrecords/iot-orchid
+    restart: unless-stopped
     environment:
       DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432"
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "3000:3000"
     depends_on:
       - db
 
   db:
     image: postgres:15.2-alpine
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
