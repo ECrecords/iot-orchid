@@ -1,62 +1,135 @@
-#[macro_use]
-extern crate rocket;
+use axum::{
+    extract::{self, Path},
+    Extension, Json, Router,
+};
 
-use paho_mqtt as mqtt;
-use rocket::tokio::sync;
-use std::{process, time};
-use std::sync::Arc;
+use axum::routing::{get, post};
 
-type SharedMQTTClient = Arc<sync::Mutex<mqtt::AsyncClient>>;
+use serde::{Deserialize, Serialize};
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres, Row};
 
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
+#[derive(Serialize)]
+struct ClustersResponse {
+    clusters: Vec<String>,
 }
 
-#[get("/info/<uid>")]
-fn device_details(uid: &str) -> String {
-    let test = format!("{}", uid);
-    println!("{}", test);
+async fn get_clusters(
+    state: Extension<Pool<Postgres>>,
+) -> Result<Json<ClustersResponse>, Json<ClustersResponse>> {
+    let Extension(pool) = state;
 
-    uid.to_string()
-}
+    let query = sqlx::query!("SELECT id FROM clusters")
+        .fetch_all(&pool)
+        .await;
 
-#[post("/subscribe/<topic>")]
-async fn topic_subscribe(topic: &str, mqtt_client: &rocket::State<SharedMQTTClient>) -> String {
-    let cli = mqtt_client.lock().await;
+    match query {
+        Ok(query) => {
+            let clusters: Vec<String> = query.iter().map(|row| row.id.clone()).collect();
 
-    match cli.subscribe(topic, 0).await {
-        Ok(_) => "Subscribed Succesfully".to_string(),
-        Err(_) => "Failed to Subscribed".to_string()
+            Ok(Json(ClustersResponse { clusters }))
+        }
+        Err(_) => Err(Json(ClustersResponse { clusters: vec![] })),
     }
 }
 
-#[launch]
-fn rocket() -> _ {
-    let create_opts = mqtt::CreateOptionsBuilder::new()
-        .server_uri("tcp://localhost:1883")
-        .client_id("Mosquitto Broker")
-        .finalize();
+async fn get_devices(Path(cluster_id): Path<String>) -> String {
+    format!("List of devices in cluster {}", cluster_id)
+}
 
-    let cli = mqtt::AsyncClient::new(create_opts).expect("Error creating MQTT client.");
+#[derive(Serialize)]
+struct DeviceInfo {
+    token: String,
+    cluster_id: String,
+    topics: Vec<String>,
+}
 
-    let broker_connect_config = mqtt::ConnectOptionsBuilder::new()
-        .connect_timeout(time::Duration::new(10, 0))
-        .finalize();
+// two path arguments cluster_id and device_token
+async fn get_devices_info(
+    Path((cluster_id, device_token)): Path<(String, String)>,
+) -> Json<DeviceInfo> {
+    Json(DeviceInfo {
+        token: device_token,
+        cluster_id,
+        topics: vec!["topic-1".to_string(), "topic-2".to_string()],
+    })
+}
 
-    let tok = cli.connect(broker_connect_config);
+#[derive(Deserialize)]
+struct CreateCluster {
+    id: String,
+    region: String,
+}
 
-    match tok.wait() {
-        Ok(response) => response,
-        Err(error) => {
-            eprintln!("Failed to connect to MQTT broker because {}", error);
-            process::exit(-1);
+#[derive(Serialize)]
+struct Cluster {
+    id: String,
+    region: String,
+}
+
+async fn create_cluster(
+    state: Extension<Pool<Postgres>>,
+    extract::Json(cluster): extract::Json<CreateCluster>,
+) -> Result<Json<Cluster>, Json<Cluster>> {
+    let Extension(pool) = state;
+    let query =
+        sqlx::query("INSERT INTO clusters (id, region) VALUES ($1, $2) RETURNING id, region")
+            .bind(&cluster.id)
+            .bind(&cluster.region)
+            .fetch_optional(&pool)
+            .await;
+
+    match query {
+        Ok(query) => {
+            let query = query.unwrap();
+
+            Ok(Json(Cluster {
+                id: query.get(0),
+                region: query.get(1),
+            }))
         }
+        Err(_) => Err(Json(Cluster {
+            id: "error".to_string(),
+            region: "error".to_string(),
+        })),
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    dotenv::dotenv().ok();
+
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set.");
+
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&url)
+        .await
+        .unwrap_or_else(|_| panic!("Failed to create Postgres connection pool! URL: {}", url));
+
+    match sqlx::migrate!("./migrations").run(&pool).await {
+        Ok(_) => println!("Migrations ran successfully"),
+        Err(e) => println!("Migrations failed: {}", e),
+    }
+
+    let app = Router::new()
+        .nest("/api", app().await)
+        .layer(Extension(pool))
+        .into_make_service();
+
+    // run our app with hyper, listening globally on port 3000
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+
+    match axum::serve(listener, app).await {
+        Ok(_) => println!("Server started successfully"),
+        Err(e) => println!("Server failed: {}", e),
     };
+}
 
-    let mqtt_client = Arc::new(sync::Mutex::new(cli));
-
-    rocket::build()
-        .mount("/", routes![index, topic_subscribe])
-        .manage(mqtt_client)
+async fn app() -> Router {
+    Router::new()
+        .route("/", get(|| async { "Hello, World!" }))
+        .route("/clusters", get(get_clusters))
+        .route("/cluster", post(create_cluster))
+        .route("/clusters/:id/devices", get(get_devices))
+        .route("/clusters/:id/devices/:token", get(get_devices_info))
 }
