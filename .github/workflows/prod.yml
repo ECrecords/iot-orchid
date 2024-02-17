@@ -42,7 +42,7 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/iot-orchid:v0.1-alpha
         push: true
     
-  deloy:
+  deploy:
     needs: build
     runs-on: ubuntu-latest
 
@@ -59,11 +59,13 @@ jobs:
     - name: Install sshpass
       run: sudo apt-get install sshpass
     
-    - name: Copy docker-compose.yml to droplet
+    - name: Copy docker-compose.yml to Droplet
+      env:
+        SSHPASS: ${{ secrets.DROPLET_PASSWORD }}
       run: |
-        sshpass -p ${{ secrets.DROPLET_PASSWORD }} scp -o StrictHostKeyChecking=no docker-compose.yml root@${{ secrets.DROPLET_IP }}:~    
-
-    - name: Deplay
+        sshpass -e scp -o StrictHostKeyChecking=no docker-compose.yml root@${{ secrets.DROPLET_IP }}:~
+        
+    - name: Deploy
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DROPLET_IP }}
