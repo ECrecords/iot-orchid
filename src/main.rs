@@ -1,17 +1,36 @@
-use axum::{extract::{self, Path}, Json, Router};
-
-use axum::routing::{
-    get,
-    post
+use axum::{
+    extract::{self, Path},
+    Extension, Json, Router,
 };
 
+use axum::routing::{delete, get, post, put};
+
 use serde::{Deserialize, Serialize};
+use sqlx::{pool, postgres::PgPoolOptions, query, Pool, Postgres, Row};
 
-
-async fn get_clusters() -> String {
-    return String::from("List of clusters");
+#[derive(Serialize)]
+struct ClustersResponse {
+    clusters: Vec<String>,
 }
 
+async fn get_clusters(
+    state: Extension<Pool<Postgres>>,
+) -> Result<Json<ClustersResponse>, Json<ClustersResponse>> {
+    let Extension(pool) = state;
+
+    let query = sqlx::query!("SELECT id FROM clusters")
+        .fetch_all(&pool)
+        .await;
+
+    match query {
+        Ok(query) => {
+            let clusters: Vec<String> = query.iter().map(|row| row.id.clone()).collect();
+
+            Ok(Json(ClustersResponse { clusters }))
+        }
+        Err(_) => Err(Json(ClustersResponse { clusters: vec![] })),
+    }
+}
 
 async fn get_devices(Path(cluster_id): Path<String>) -> String {
     format!("List of devices in cluster {}", cluster_id)
@@ -21,15 +40,17 @@ async fn get_devices(Path(cluster_id): Path<String>) -> String {
 struct DeviceInfo {
     token: String,
     cluster_id: String,
-    topics: Vec<String>
+    topics: Vec<String>,
 }
 
 // two path arguments cluster_id and device_token
-async fn get_devices_info(Path((cluster_id, device_token)): Path<(String, String)>) -> Json<DeviceInfo> {
+async fn get_devices_info(
+    Path((cluster_id, device_token)): Path<(String, String)>,
+) -> Json<DeviceInfo> {
     Json(DeviceInfo {
         token: device_token,
         cluster_id,
-        topics: vec!["topic-1".to_string(), "topic-2".to_string()]
+        topics: vec!["topic-1".to_string(), "topic-2".to_string()],
     })
 }
 
