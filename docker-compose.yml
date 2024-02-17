@@ -1,7 +1,7 @@
 version: '3'
 services:
   api:
-    image: ecrecords/iot-orchid
+    image: ecrecords/iot-orchid:v0.1-alpha
     restart: unless-stopped
     environment:
       DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432"
