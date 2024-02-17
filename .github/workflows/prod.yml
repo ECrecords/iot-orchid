@@ -60,7 +60,8 @@ jobs:
       run: sudo apt-get install sshpass
     
     - name: Copy docker-compose.yml to droplet
-      run: sshpass -v -p ${{ secrets.DROPLET_PASSWORD }} scp -o StrictHostKeyChecking=no docker-compose.yml root@${{ secrets.DROPLET_IP }}:~
+      run: |
+        sshpass -p ${{ secrets.DROPLET_PASSWORD }} scp -o StrictHostKeyChecking=no docker-compose.yml root@${{ secrets.DROPLET_IP }}:~    
 
     - name: Deplay
       uses: appleboy/ssh-action@master
