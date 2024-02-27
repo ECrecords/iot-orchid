@@ -1,0 +1,1 @@
+INSERT INTO clusters (id) VALUES ('factory-a'), ('factory-b'), ('factory-c');
