@@ -9,7 +9,6 @@ use sqlx::Postgres;
 pub type Database = Pool<Postgres>;
 
 pub async fn new_database_pool() -> Result<Pool<Postgres>> {
-    dotenv::dotenv().ok();
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
