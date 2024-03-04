@@ -29,7 +29,7 @@ async fn main() {
 
     let addr = format!("{}:{}", address, port);
 
-    let app = match web::routes().await {
+    let app = match web::get_routes().await {
         Ok(app) => app,
         Err(e) => panic!("Failed to create routes: {}", e),
     };
