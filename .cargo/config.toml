@@ -1,0 +1,4 @@
+
+
+## -- Secerets
+DATABASE_URL="postgres://postgres:${POSTGRES_PASSWORD}@localhost:5432"
