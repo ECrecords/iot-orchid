@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM users WHERE token = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "cluster_id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "pwd_salt",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "pwd_hash",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "token",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "7e792d545bec4fc5afb0d146a2bf90d8ec3e7334e892faa36ad12a56f9ea6df4"
+}
