@@ -80,6 +80,7 @@ jobs:
         script: |
           cd ~
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          export JWT_SECRET= ${{ secrets.JWT_SECRET }}
           docker-compose down
           docker-compose pull
           docker-compose up -d
