@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     model::{user::UserBMC, ModelManager},
-    web::jwt_auth,
+    auth::jwt::JWTBuilder,
 };
 
 // Struct to represent the login response, containing only the JWT token.
@@ -46,16 +46,15 @@ pub async fn handler(
 
     // Verify the provided password against the stored hash.
     let verified = verify(&password, &user.pwd_hash).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    
     if !verified {
         return Err(StatusCode::UNAUTHORIZED); // Password does not match
     }
 
     // Generate a JWT token for the authenticated user.
-    let token = jwt_auth::JWTBuilder::new()
-        .expect("Failed to create JWTBuilder")
+    let token = JWTBuilder::new()?
         .username(&username)
-        .to_token()
-        .expect("Failed to generate token");
+        .to_token()?;
 
     // Update the user's token in the database.
     UserBMC::update_token(&model, &username, &token)

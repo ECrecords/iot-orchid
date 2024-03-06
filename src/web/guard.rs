@@ -1,6 +1,8 @@
 use crate::model::user::UserBMC;
 use crate::model::ModelManager;
-use crate::web::jwt_auth::verify_jwt;
+// use crate::web::jwt_auth::verify_jwt;
+use crate::auth::jwt::verify_jwt;
+
 use axum::extract::State;
 use axum::http::header::HeaderMap;
 use axum::{extract::Request, http::StatusCode, middleware::Next, response::Response};
@@ -23,7 +25,7 @@ pub async fn guard(
 
     match UserBMC::get_by_token(&model, token).await {
         Ok(Some(_user)) => {
-            verify_jwt(token)?;
+            verify_jwt(token);
         }
         Ok(None) => return Err(StatusCode::UNAUTHORIZED),
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),

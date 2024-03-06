@@ -10,7 +10,6 @@ use axum::{extract::State, middleware};
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 mod guard;
-mod jwt_auth;
 
 use paho_mqtt::async_client;
 use routes::{api, login, logout};

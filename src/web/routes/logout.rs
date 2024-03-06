@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     model::{user::UserBMC, ModelManager},
-    web::jwt_auth,
+    auth,
 };
 
 // Struct to represent the logout responsetoken.

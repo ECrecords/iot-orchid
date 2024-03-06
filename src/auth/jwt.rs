@@ -1,7 +1,4 @@
-use crate::web::error;
-
-#[allow(unused_imports)]
-pub use self::error::{Error, Result};
+use super::error::{Error, Result}; // Use `super` to refer to the parent module (`auth`), then import `Error` and `Result`
 
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
@@ -21,7 +18,7 @@ pub struct JWTBuilder {
 
 impl JWTBuilder {
     pub fn new() -> Result<Self> {
-        let secret = std::env::var("JWT_SECRET")?;
+        let secret = std::env::var("JWT_SECRET").map_err(|_| Error::JWTSecrectNotFound)?;
 
         Ok(Self {
             secret: secret,
@@ -46,15 +43,16 @@ impl JWTBuilder {
 
         let key = EncodingKey::from_secret(self.secret.as_ref());
 
-        Ok(encode(&Header::default(), &claim, &key)?)
+        Ok(encode(&Header::default(), &claim, &key).map_err(|_| Error::JWTCreationError)?)
     }
 }
 
 pub fn verify_jwt(token: &str) -> Result<()> {
-    let secret = std::env::var("JWT_SECRET")?;
+    let secret = std::env::var("JWT_SECRET").map_err(|_| Error::JWTSecrectNotFound)?;
     let key = DecodingKey::from_secret(secret.as_bytes());
 
-    decode::<Claims>(token, &key, &Validation::new(Algorithm::HS256))?;
+    decode::<Claims>(token, &key, &Validation::new(Algorithm::HS256))
+        .map_err(|_| Error::JWTValidationError)?;
 
     Ok(())
 }
