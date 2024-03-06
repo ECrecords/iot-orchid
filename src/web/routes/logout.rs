@@ -21,5 +21,8 @@ pub struct LogoutResponse {
 pub async fn handler(
     State(model): State<ModelManager>,
 ) -> Result<AxumJson<LogoutResponse>, StatusCode> {
-    todo!()
+    
+    Ok(AxumJson(LogoutResponse {
+        message: "TODO".to_string(),
+    }))
 }
