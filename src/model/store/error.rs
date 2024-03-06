@@ -6,7 +6,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Serialize)]
 pub enum Error {
-    PoolCreationFailed(String)
+    PoolCreationFailed(String),
+    MigrationFailed(String)
 }
 
 // implment display

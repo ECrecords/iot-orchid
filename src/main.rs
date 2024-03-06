@@ -1,5 +1,6 @@
 mod model;
 mod web;
+use serde::de;
 use tokio;
 
 #[tokio::main]
@@ -25,7 +26,8 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(&addr).await
         .expect("Failed to bind to address");
 
-    axum::serve(listener, app).await
-        .expect("Failed to start server");
-
+    match axum::serve(listener, app).await {
+        Ok(_) => (),
+        Err(e) => println!("Server error: {}", e),
+    }
 }

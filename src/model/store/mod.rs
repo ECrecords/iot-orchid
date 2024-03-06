@@ -17,5 +17,11 @@ pub async fn new_database_pool() -> Result<Pool<Postgres>> {
         .await
         .map_err(|e| Error::PoolCreationFailed(e.to_string()))?;
 
+    // run the migrations
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .map_err(|e| Error::MigrationFailed(e.to_string()))?;
+
     Ok(pool)
 }
