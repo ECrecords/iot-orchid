@@ -1,11 +1,17 @@
 mod model;
 mod web;
-use tokio;
 mod auth;
+
+use tokio;
+
+#[macro_use]
+extern crate log;
+
 
 #[tokio::main]
 async fn main() {
     dotenv::dotenv().ok();
+    env_logger::init();
 
     let Ok(port) = std::env::var("IOT_ORCHID_PORT") else {
         panic!("IOT_ORCHID_PORT must be set.");

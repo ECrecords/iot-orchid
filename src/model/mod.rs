@@ -12,6 +12,7 @@ pub struct ModelManager {
     db: store::Database,
 }
 
+#[allow(dead_code)]
 impl ModelManager {
 
     /// Create a new ModelManager

@@ -1,8 +1,11 @@
+#![allow(unused_imports)]
 use crate::model::error::{Error, Result};
+
 use crate::model::ModelManager;
+
 use serde::{Deserialize, Serialize};
-// use sqlx::types::Uuid;
-use sqlx::{error, FromRow};
+
+use sqlx::FromRow;
 
 #[derive(Debug)]
 pub struct UserBMC {}
@@ -16,6 +19,7 @@ pub struct User {
     pub token: Option<String>,
 }
 
+#[allow(dead_code)]
 impl UserBMC {
     pub async fn get_all(model: &ModelManager) -> Result<Vec<User>> {
         let users = sqlx::query_as!(User, "SELECT * FROM users")

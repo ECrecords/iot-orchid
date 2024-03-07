@@ -33,7 +33,7 @@ impl JWTBuilder {
 
     pub fn to_token(&self) -> Result<String> {
         let now = Utc::now();
-        let expire = now + Duration::seconds(60);
+        let expire = now + Duration::seconds(60 * 60 * 5);
 
         let claim = Claims {
             exp: expire.timestamp() as usize,

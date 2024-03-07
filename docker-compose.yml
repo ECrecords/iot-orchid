@@ -5,8 +5,9 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432"
-      IOT_ORCHID_PORT: 3000
-      IOT_ORCHID_ADDRESS: 0.0.0.0
+      IOT_ORCHID_PORT: ${IOT_ORCHID_PORT}
+      IOT_ORCHID_ADDRESS: ${IOT_ORCHID_ADDRESS}
+      JWT_SECRET: ${JWT_SECRET}
     build:
       context: .
       dockerfile: Dockerfile

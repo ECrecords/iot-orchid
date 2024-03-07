@@ -55,7 +55,9 @@ impl From<Error> for StatusCode {
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         
-        let status: StatusCode = self.into();
+        error!("Error: {:?}", &self);
+
+        let status: StatusCode = self.into();        
 
         status.into_response()
     }
