@@ -80,8 +80,8 @@ jobs:
         script: |
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export JWT_SECRET=${{ secrets.JWT_SECRET }}
-          export IOT_ORCHID_ADDRESS=${{ env.IOT_ORCHID_ADDRESS }}
-          export IOT_ORCHID_PORT=${{ env.IOT_ORCHID_PORT }}
+          export IOT_ORCHID_ADDRESS=${{ vars.IOT_ORCHID_ADDRESS }}
+          export IOT_ORCHID_PORT=${{ vars.IOT_ORCHID_PORT }}
           cd ~
           docker-compose down
           docker-compose up -d
