@@ -73,14 +73,18 @@ jobs:
 
     - name: Deploy
       uses: appleboy/ssh-action@master
+      env:
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        IOT_ORCHID_ADDRESS: ${{ env.IOT_ORCHID_ADDRESS}}
+        IOT_ORCHID_PORT: ${{ env.IOT_ORCHID_PORT }}
       with:
         host: ${{ secrets.DROPLET_IP }}
         username: root
         password: ${{ secrets.DROPLET_PASSWORD }}
+        
         script: |
           cd ~
-          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          export JWT_SECRET= ${{ secrets.JWT_SECRET }}
           docker-compose down
           docker-compose pull
           docker-compose up -d
