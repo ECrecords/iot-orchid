@@ -1,5 +1,3 @@
-use std::error;
-
 use crate::model::store;
 use serde::Serialize;
 

@@ -1,34 +1,28 @@
+use crate::web::error::{Error, Result};
+use crate::auth;
 use crate::model::user::UserBMC;
 use crate::model::ModelManager;
-// use crate::web::jwt_auth::verify_jwt;
 use crate::auth::jwt::verify_jwt;
 
 use axum::extract::State;
-use axum::http::header::HeaderMap;
-use axum::{extract::Request, http::StatusCode, middleware::Next, response::Response};
+use axum::{extract::Request, middleware::Next, response::Response};
+
+use axum_auth::AuthBearer;
 
 pub async fn guard(
     State(model): State<ModelManager>,
-    headers: HeaderMap,
+    AuthBearer(token): AuthBearer,
     request: Request,
     next: Next,
-) -> Result<Response, StatusCode> {
-    // Extract the Authorization header and the token
-    let auth_header = headers
-        .get("Authorization")
-        .ok_or(StatusCode::UNAUTHORIZED)?;
+) -> Result<Response> {
 
-    let auth_str = auth_header.to_str().map_err(|_| StatusCode::BAD_REQUEST)?;
-    let token = auth_str
-        .strip_prefix("Bearer ")
-        .ok_or(StatusCode::UNAUTHORIZED)?;
+    let token = token.as_str();
 
-    match UserBMC::get_by_token(&model, token).await {
-        Ok(Some(_user)) => {
-            verify_jwt(token);
+    match UserBMC::get_by_token(&model, token).await? {
+        Some(_user) => {
+            verify_jwt(token)?;
         }
-        Ok(None) => return Err(StatusCode::UNAUTHORIZED),
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+        None => return Err(Error::AuthError(auth::Error::JWTValidationError)),
     };
 
     Ok(next.run(request).await)

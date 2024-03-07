@@ -2,6 +2,10 @@
 pub mod jwt;
 pub mod error;
 
-// Optionally re-export items to simplify their paths when used externally
+// re-export items to simplify their paths when used externally
+#[allow(unused_imports)]
 pub use jwt::*;
-pub use error::{Error, Result}; // This makes Error and Result accessible via `crate::auth::Error` and `crate::auth::Result`
+
+// makes Error and Result accessible via `crate::auth::Error` and `crate::auth::Result`
+#[allow(unused_imports)]
+pub use error::{Error, Result}; 

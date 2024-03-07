@@ -1,10 +1,7 @@
 use axum::Router;
 
 
-
+#[allow(dead_code)]
 pub fn routes() -> Router {
-    Router::new()
-        .route("/clusters", todo!())
-        .route("/clusters/:cluster_id/devices", todo!())
-        .route("/clusters/:cluster_id/devices/:device_token", todo!())
+    todo!()
 } 

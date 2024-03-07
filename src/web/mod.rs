@@ -4,15 +4,14 @@ mod routes;
 #[allow(unused_imports)]
 pub use self::error::{Error, Result};
 
-use axum::{extract::State, middleware};
+use axum::middleware;
 
 #[allow(unused_imports)]
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 mod guard;
 
-use paho_mqtt::async_client;
-use routes::{api, login, logout};
+use routes::{login, logout};
 
 use crate::model::ModelManager;
 
