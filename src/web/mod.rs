@@ -11,22 +11,27 @@ use axum::routing::{delete, get, post, put};
 use axum::Router;
 mod guard;
 
-use routes::{login, logout};
+use routes::{login, logout, clusters};
 
 use crate::model::ModelManager;
 
 pub async fn get_routes() -> Result<Router> {
     let mm = ModelManager::new().await?;
 
-    let routes = axum::Router::new()
+    let guarded_routes = axum::Router::new()
+        
+        .route("/clusters", get(clusters::get_clusters))
         .route("/logout", post(logout::handler))
         .route_layer(middleware::from_fn_with_state(mm.clone(), guard::guard))
+        .with_state(mm.clone());
+
+    let unguarded_routes = axum::Router::new()
         .route("/login", post(login::handler))
         .with_state(mm);
 
-    // .route("/clusters", axum::routing::get(get_clusters))
-    // .route("/clusters/:cluster_id/devices", axum::routing::get(get_devices))
-    // .route("/clusters/:cluster_id/devices/:device_token", axum::routing::get(get_devices_info))
+    let routes = axum::Router::new()
+        .nest("/api", guarded_routes)
+        .nest("/api", unguarded_routes);
 
     Ok(routes)
 }

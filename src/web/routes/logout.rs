@@ -1,13 +1,14 @@
 #![allow(unused_imports)]
 use crate::web::error::{Error, Result};
 
-use axum::extract::State;
+use axum::extract::{State, Extension};
 use axum::Json;
 use serde::Serialize;
 
 use crate::{
     model::{user::UserBMC, ModelManager},
     auth,
+    ctx::Ctx,
 };
 
 use axum_auth::AuthBearer;
@@ -21,13 +22,12 @@ pub struct LogoutResponse {
 // Asynchronous handler function for login requests.
 pub async fn handler(
     State(model): State<ModelManager>,
-    AuthBearer(token): AuthBearer,
-
+    Extension(ctx): Extension<Ctx>,
 ) -> Result<Json<LogoutResponse>> {
 
-    let token = token.as_str();
+    let token = ctx.jwt().to_string();
 
-    match UserBMC::get_by_token(&model, token).await? {
+    match UserBMC::get_by_token(&model, &token).await? {
         Some(user) => {
             UserBMC::update_token(&model, &user.username, "").await?;
         }

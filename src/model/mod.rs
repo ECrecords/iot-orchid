@@ -4,6 +4,7 @@ pub use self::error::{Error, Result};
 
 mod store;
 pub mod user;
+pub mod cluster;
 
 /// The ModelManager is responsible for managing the database connection
 /// and providing access to the database to the rest of the application.

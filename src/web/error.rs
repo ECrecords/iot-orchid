@@ -11,6 +11,17 @@ pub enum Error {
     AuthError(auth::Error),
     LoginFailPwdNotMatch,
     LoginFailUserNotFound,
+    CtxExtError(CtxExtError),
+}
+
+#[derive(Clone, Debug)]
+pub enum CtxExtError {
+	TokenNotInAuthBearer,
+	TokenWrongFormat,
+	UserNotFound,
+	FailValidate,
+	CannotSetTokenCookie,
+	CtxNotInRequestExt,
 }
 
 impl std::fmt::Display for Error {
@@ -47,6 +58,9 @@ impl From<Error> for StatusCode {
 
             Error::LoginFailPwdNotMatch | Error::LoginFailUserNotFound => StatusCode::UNAUTHORIZED,
             // fall back to internal server error
+
+            Error::CtxExtError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

@@ -2,6 +2,7 @@
 use crate::model::error::{Error, Result};
 
 use crate::model::ModelManager;
+use crate::ctx::Ctx;
 
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +14,6 @@ pub struct UserBMC {}
 #[derive(Debug, Serialize, Deserialize,FromRow)]
 pub struct User {
     pub username: String,
-    pub cluster_id: Option<String>,
     pub pwd_salt: String,
     pub pwd_hash: String,
     pub token: Option<String>,
@@ -21,13 +21,7 @@ pub struct User {
 
 #[allow(dead_code)]
 impl UserBMC {
-    pub async fn get_all(model: &ModelManager) -> Result<Vec<User>> {
-        let users = sqlx::query_as!(User, "SELECT * FROM users")
-            .fetch_all(&model.db)
-            .await?;
 
-        Ok(users)
-    }
 
     pub async fn get_by_username(model: &ModelManager, username: &str) -> Result<Option<User>> {
         let user = sqlx::query_as!(User, "SELECT * FROM users WHERE username = $1", username)
@@ -56,4 +50,8 @@ impl UserBMC {
 
         Ok(())
     }
+
+    
+
+    
 }

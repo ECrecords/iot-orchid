@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM clusters",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "region",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "token",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "f9b9412cd2d56adba3094bb720a8dbbc6ab251c79b20d3a11870bcac06b91327"
+}

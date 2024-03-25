@@ -50,8 +50,7 @@ pub async fn handler(
     let token = JWTBuilder::new()?.username(&username).to_token()?;
 
     // Update the user's token in the database.
-    UserBMC::update_token(&model, &username, &token)
-        .await?;
+    UserBMC::update_token(&model, &username, &token).await?;
 
     // Return the JWT token in the response.
     Ok(AxumJson(LoginResponse { token }))

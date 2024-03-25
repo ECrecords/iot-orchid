@@ -1,7 +1,8 @@
 mod model;
 mod web;
 mod auth;
-
+mod ctx;
+mod events;
 use tokio;
 
 #[macro_use]
