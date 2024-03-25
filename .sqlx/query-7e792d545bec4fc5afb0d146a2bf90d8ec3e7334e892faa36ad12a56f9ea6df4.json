@@ -10,21 +10,16 @@
       },
       {
         "ordinal": 1,
-        "name": "cluster_id",
-        "type_info": "Varchar"
-      },
-      {
-        "ordinal": 2,
         "name": "pwd_salt",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 3,
+        "ordinal": 2,
         "name": "pwd_hash",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 4,
+        "ordinal": 3,
         "name": "token",
         "type_info": "Varchar"
       }
@@ -36,7 +31,6 @@
     },
     "nullable": [
       false,
-      true,
       false,
       false,
       true
