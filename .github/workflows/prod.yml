@@ -71,6 +71,12 @@ jobs:
       run: |
         sshpass -e scp -o StrictHostKeyChecking=no -r ./migrations root@${{ secrets.DROPLET_IP }}:~
 
+    - name: Copy Mosquitto Config File to Droplet
+      env:
+        SSHPASS: ${{ secrets.DROPLET_PASSWORD }}
+      run: |
+        sshpass -e scp -o StrictHostKeyChecking=no ./config/mosquitto.conf root@${{ secrets.DROPLET_IP }}:~
+
     - name: Deploy
       uses: appleboy/ssh-action@master
       with:
