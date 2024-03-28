@@ -2,7 +2,7 @@
 use crate::model::error::{Error, Result};
 
 use crate::model::ModelManager;
-use crate::ctx::Ctx;
+use crate::context::Ctx;
 
 use serde::{Deserialize, Serialize};
 
@@ -21,7 +21,6 @@ pub struct User {
 
 #[allow(dead_code)]
 impl UserBMC {
-
 
     pub async fn get_by_username(model: &ModelManager, username: &str) -> Result<Option<User>> {
         let user = sqlx::query_as!(User, "SELECT * FROM users WHERE username = $1", username)
@@ -50,8 +49,4 @@ impl UserBMC {
 
         Ok(())
     }
-
-    
-
-    
 }

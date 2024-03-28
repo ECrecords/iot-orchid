@@ -25,4 +25,3 @@ CREATE TABLE cluster_devices (
     cluster_id VARCHAR(255) REFERENCES clusters(id),
     last_seen TIMESTAMP
 );
-

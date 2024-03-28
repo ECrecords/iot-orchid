@@ -8,7 +8,7 @@ use serde::Serialize;
 use crate::{
     model::{user::UserBMC, ModelManager},
     auth,
-    ctx::Ctx,
+    context::Ctx,
 };
 
 use axum_auth::AuthBearer;

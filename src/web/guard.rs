@@ -1,6 +1,6 @@
 use crate::web::error::{Error, Result};
 use crate::auth;
-use crate::ctx::Ctx;
+use crate::context::Ctx;
 use crate::model::user::UserBMC;
 use crate::model::ModelManager;
 use crate::auth::jwt::verify_jwt;

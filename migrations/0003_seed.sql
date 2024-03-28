@@ -15,3 +15,17 @@ INSERT INTO user_clusters (user_id, cluster_id) VALUES
     ('user-a', 'factory-a'),
     ('user-b', 'factory-b'),
     ('user-c', 'factory-c');
+
+INSERT INTO  cluster_devices (id, cluster_id, last_seen) VALUES
+    ('device-a1', 'factory-a', NOW()),
+    ('device-a2', 'factory-a', NOW()),
+    ('device-a3', 'factory-a', NOW()),
+    ('device-a4', 'factory-a', NOW()),
+    ('device-b1', 'factory-b', NOW()),
+    ('device-b2', 'factory-b', NOW()),
+    ('device-b3', 'factory-b', NOW()),
+    ('device-b4', 'factory-b', NOW()),
+    ('device-c1', 'factory-c', NOW()),
+    ('device-c2', 'factory-c', NOW()),
+    ('device-c3', 'factory-c', NOW()),
+    ('device-c4', 'factory-c', NOW());

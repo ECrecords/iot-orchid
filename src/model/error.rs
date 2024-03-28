@@ -1,13 +1,15 @@
 use crate::model::store;
+// use crate::model::mqtt;
 use serde::Serialize;
 
 // Error handling for the store
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub enum Error {
     Store(store::Error),
     DatabaseError,
+    // Mqtt(mqtt::Error),
     EntityNotFound,
     UserNotFound,
 }

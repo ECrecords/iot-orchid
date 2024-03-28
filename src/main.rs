@@ -1,7 +1,7 @@
 mod model;
 mod web;
 mod auth;
-mod ctx;
+mod context;
 mod events;
 use tokio;
 
