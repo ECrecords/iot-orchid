@@ -1,10 +1,9 @@
 use serde::Serialize;
 
-
 // Error handling for the store
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub enum Error {
     PoolCreationFailed(String),
     MigrationFailed(String)

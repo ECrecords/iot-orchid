@@ -8,7 +8,7 @@ use serde::Serialize;
 use crate::{
     model::{user::UserBMC, ModelManager},
     auth,
-    context::Ctx,
+    context::UserContext,
 };
 
 use axum_auth::AuthBearer;
@@ -22,7 +22,7 @@ pub struct LogoutResponse {
 // Asynchronous handler function for login requests.
 pub async fn handler(
     State(model): State<ModelManager>,
-    Extension(ctx): Extension<Ctx>,
+    Extension(ctx): Extension<UserContext>,
 ) -> Result<Json<LogoutResponse>> {
 
     let token = ctx.jwt().to_string();

@@ -1,6 +1,6 @@
 use crate::web::error::{Error, Result};
 use crate::auth;
-use crate::context::Ctx;
+use crate::context::UserContext;
 use crate::model::user::UserBMC;
 use crate::model::ModelManager;
 use crate::auth::jwt::verify_jwt;
@@ -29,7 +29,7 @@ pub async fn guard(
     }
 
     // If the JWT is valid, insert the context into the request extensions
-    request.extensions_mut().insert(Ctx {
+    request.extensions_mut().insert(UserContext {
         jwt: token_str.to_string(),
         username: user.username,
     });

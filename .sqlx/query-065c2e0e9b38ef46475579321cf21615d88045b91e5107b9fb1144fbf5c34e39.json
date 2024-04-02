@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT clusters.id\n            FROM clusters\n            JOIN user_clusters ON clusters.id = user_clusters.cluster_id\n            WHERE user_clusters.user_id = $1 AND clusters.id = $2 AND clusters.token = $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "065c2e0e9b38ef46475579321cf21615d88045b91e5107b9fb1144fbf5c34e39"
+}

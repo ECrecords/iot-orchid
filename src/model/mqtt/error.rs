@@ -1,12 +1,14 @@
-use serde::Serialize;
+// use serde::Serialize;
 use paho_mqtt as mqtt;
 
 // Error handling for the store
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug)]
 pub enum Error {
-    MqttClientCreationFailed(mqtt::Error),
+    MqttClientConnectionTimeout,
+    MqttClientCreationFailed,
+    MqttClientFailToConnect,
 
 }
 
@@ -17,9 +19,14 @@ impl std::fmt::Display for Error {
     }
 }
 
-impl From<mqtt::Error> for Error {
+impl From<mqtt::errors::Error> for Error {
     fn from(err: mqtt::Error) -> Self {
-        Error::MqttClientCreationFailed(err)
+        match err {
+            mqtt::Error::Timeout => Error::MqttClientConnectionTimeout,
+            _ => Error::MqttClientCreationFailed
+
+        // Error::MqttClientCreationFailed(err)
+        }
     }
     
 }

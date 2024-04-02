@@ -44,7 +44,10 @@ pub async fn handler(
     };
 
     // Verify the provided password.
-    verify(&password, &user.pwd_hash).map_err(|_| Error::LoginFailPwdNotMatch)?;
+    if !verify(&password, &user.pwd_hash).map_err(|_| Error::LoginFailPwdNotMatch)? {
+        return Err(Error::LoginFailPwdNotMatch);
+    }
+    
 
     // Generate a JWT token for the authenticated user.
     let token = JWTBuilder::new()?.username(&username).to_token()?;

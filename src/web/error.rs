@@ -5,7 +5,7 @@ use axum::response::{IntoResponse, Response};
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Error {
     ModelError(model::Error),
     AuthError(auth::Error),
@@ -72,10 +72,8 @@ impl IntoResponse for Error {
         error!("Error: {:?}", &self);
 
         let status: StatusCode = self.into();        
-
         status.into_response()
     }
 }
-
 
 impl std::error::Error for Error {}

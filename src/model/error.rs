@@ -1,15 +1,14 @@
 use crate::model::store;
-// use crate::model::mqtt;
-use serde::Serialize;
+use crate::model::mqtt;
 
 // Error handling for the store
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Error {
     Store(store::Error),
     DatabaseError,
-    // Mqtt(mqtt::Error),
+    Mqtt(mqtt::Error),
     EntityNotFound,
     UserNotFound,
 }
@@ -33,6 +32,12 @@ impl From<sqlx::Error> for Error {
             sqlx::Error::RowNotFound => Error::EntityNotFound,
             _ => Error::DatabaseError,
         }
+    }
+}
+
+impl From<mqtt::Error> for Error {
+    fn from(err: mqtt::Error) -> Self {
+        Error::Mqtt(err)
     }
 }
 

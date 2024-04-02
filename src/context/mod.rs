@@ -1,11 +1,11 @@
 #[derive(Debug, Clone)]
-pub struct Ctx {
+pub struct UserContext {
     pub jwt: String,
     pub username: String,
 
 }
 
-impl Ctx {
+impl UserContext {
     pub fn username(&self) -> String {
         self.username.clone()
     }
