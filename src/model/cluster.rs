@@ -103,23 +103,23 @@ impl ClusterBMC {
         Ok(devices)
     }
 
-    pub async fn ping_all(ctx: &UserContext, model: &ModelManager, id: &str) -> Result<Vec<String>> {
+    // pub async fn ping_all(ctx: &UserContext, model: &ModelManager, id: &str) -> Result<Vec<String>> {
 
-        let devices = Self::get_devices(&ctx, &model, &id).await?;
-        let mut res: Vec<String> = vec![];
-        for device in devices {
-            model.mqtt().publish(mqtt::MessageBuilder::new()
-                .topic(format!("cluster/{}/device/{}/ping", id, device.id))
-                .payload("ping")
-                .qos(1)
-                .finalize()
-            ).await.unwrap();
-            let topic = format!("cluster/{}/device/{}", id, device.id);
-            res.push(topic.clone());
-        }
+    //     let devices = Self::get_devices(&ctx, &model, &id).await?;
+    //     let mut res: Vec<String> = vec![];
+    //     for device in devices {
+    //         model.mqtt().publish(mqtt::MessageBuilder::new()
+    //             .topic(format!("cluster/{}/device/{}/ping", id, device.id))
+    //             .payload("ping")
+    //             .qos(1)
+    //             .finalize()
+    //         ).await.unwrap();
+    //         let topic = format!("cluster/{}/device/{}", id, device.id);
+    //         res.push(topic.clone());
+    //     }
     
-        Ok(res)
-    }
+    //     Ok(res)
+    // }
 
     pub async fn add_device(ctx: &UserContext, model: &ModelManager, device: AddDeviceRequest) -> Result<()> {
         let device_id = device.device_id;
@@ -141,9 +141,5 @@ impl ClusterBMC {
     
         Ok(())
     }
-
-
-    pub async fn register_device(ctx: &UserContext, model: &ModelManager, id: &str) -> Result<()> {
-        todo!()
-    }
+    
 }

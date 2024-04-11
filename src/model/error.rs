@@ -1,5 +1,5 @@
 use crate::model::store;
-use crate::model::mqtt;
+// use crate::events::mqtt;
 
 // Error handling for the store
 pub type Result<T> = std::result::Result<T, Error>;
@@ -8,7 +8,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     Store(store::Error),
     DatabaseError,
-    Mqtt(mqtt::Error),
+    // Mqtt(mqtt::Error),
     EntityNotFound,
     UserNotFound,
 }
@@ -35,10 +35,10 @@ impl From<sqlx::Error> for Error {
     }
 }
 
-impl From<mqtt::Error> for Error {
-    fn from(err: mqtt::Error) -> Self {
-        Error::Mqtt(err)
-    }
-}
+// impl From<mqtt::Error> for Error {
+//     fn from(err: mqtt::Error) -> Self {
+//         Error::Mqtt(err)
+//     }
+// }
 
 impl std::error::Error for Error {}

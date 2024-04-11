@@ -2,21 +2,21 @@ mod error;
 #[allow(unused_imports)]
 pub use self::error::{Error, Result};
 
-mod routes;
+mod guard;
 mod rpc;
+mod routes;
+
+use crate::model::{ModelManager, ModelChannel};
+use routes::{clusters, login, logout};
 
 #[allow(unused_imports)]
 use axum::routing::{delete, get, post, put};
 use axum::middleware;
 use axum::Router;
-mod guard;
 
-use routes::{clusters, login, logout};
+pub async fn get_routes(model_channel: ModelChannel) -> Result<Router> {
 
-use crate::model::ModelManager;
-
-pub async fn get_routes() -> Result<Router> {
-    let mm = ModelManager::new().await?;
+    let mm = ModelManager::new(model_channel).await?;
 
     let routes = axum::Router::new()
         .nest(

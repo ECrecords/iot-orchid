@@ -24,12 +24,12 @@ pub async fn rpc_handler(
         // If the method is "test", it returns a successful JSON-RPC response with the request ID and the string "test".
         "test" => JsonRpcResponse::success(req_id, Some("test".to_string())),
 
-        "cluster.ping_all" => {
-            let param: [String; 1] = request.parse_params()?;
-            let res = ClusterBMC::ping_all(&ctx, &mm, &param[0]).await;
+        // "cluster.ping_all" => {
+        //     // let param: [String; 1] = request.parse_params()?;
+        //     // let res = ClusterBMC::ping_all(&ctx, &mm, &param[0]).await;
 
-            JsonRpcResponse::success(req_id, Some(res.unwrap()))
-        }
+        //     // JsonRpcResponse::success(req_id, Some(res.unwrap()))
+        // }
         
         m => {
             request.method_not_found(m)
