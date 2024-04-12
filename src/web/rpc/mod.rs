@@ -1,24 +1,22 @@
+#[allow(unused_imports)]
 use crate::web::error::{Error, Result};
 
 use axum::extract::Extension;
 use axum::extract::State;
-use axum_jrpc::error::JsonRpcError;
 use axum_jrpc::JsonRpcResponse;
-use axum_jrpc::{JrpcResult, JsonRpcExtractor, JsonRpcRequest, error::JsonRpcErrorReason };
+use axum_jrpc::{JrpcResult, JsonRpcExtractor};
 
 use crate::context::UserContext;
 use crate::model::ModelManager;
-use crate::model::cluster::ClusterBMC;
-
 
 pub async fn rpc_handler(
-    State(mm): State<ModelManager>,
-    Extension(ctx): Extension<UserContext>,
+    State(_mm): State<ModelManager>,
+    Extension(_ctx): Extension<UserContext>,
     request: JsonRpcExtractor,
 ) -> JrpcResult {
     let req_id = request.id.clone();
     let method = request.method.as_str();
-    
+
     // The function then checks what the method is.
     let response = match method {
         // If the method is "test", it returns a successful JSON-RPC response with the request ID and the string "test".
@@ -30,10 +28,7 @@ pub async fn rpc_handler(
 
         //     // JsonRpcResponse::success(req_id, Some(res.unwrap()))
         // }
-        
-        m => {
-            request.method_not_found(m)
-        }
+        m => request.method_not_found(m),
     };
 
     Ok(response)

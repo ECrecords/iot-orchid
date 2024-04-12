@@ -34,8 +34,8 @@ pub async fn get_cluster(
 }
 
 pub async fn create_cluster(
-    State(mm): State<ModelManager>,
-    Extension(ctx): Extension<UserContext>,
+    State(_mm): State<ModelManager>,
+    Extension(_ctx): Extension<UserContext>,
     Path(_id): Path<String>,
 ) -> Result<Json<GetClusterResponse>> {
     todo!()

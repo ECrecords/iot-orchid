@@ -7,9 +7,10 @@ pub mod user;
 pub mod cluster;
 use tokio::sync::mpsc::{Sender, Receiver};
 use crate::events::Event;
+
 pub struct ModelChannel {
-    pub to_event: Sender<Event>,
-    pub from_event: Receiver<Event>,
+    pub event_tx: Sender<Event>,
+    pub event_rx: Receiver<Event>,
 }
 
 /// The ModelManager is responsible for managing the database connection
@@ -23,7 +24,7 @@ pub struct ModelManager {
 impl ModelManager {
 
     /// Create a new ModelManager
-    pub async fn new(channels: ModelChannel) -> Result<Self> {
+    pub async fn new(_channels: ModelChannel) -> Result<Self> {
         let db = store::new_database_pool().await?;
         Ok(ModelManager { db })
     }

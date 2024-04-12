@@ -1,18 +1,46 @@
-mod model;
-mod web;
 mod auth;
 mod context;
 mod events;
+mod model;
+mod web;
 use tokio;
+
+use crate::events::{Event, EventChannels, EventManager};
+use crate::model::ModelChannel;
+use tokio::sync::mpsc::{channel, Sender};
+use web::mqtt::create_mqtt_client;
+use web::mqtt::MqttIngressManager;
 
 #[macro_use]
 extern crate log;
 
-// used to create the event queue between the event and model layers
-use tokio::sync::mpsc;
+pub struct WebChannels {
+    to_event: Sender<Event>,
+}
 
-use events::{Event, EventManager, EventChannels};
-use model::ModelChannel;
+pub fn create_channels() -> (WebChannels, EventChannels, ModelChannel) {
+    // create the event queues
+    let (web_2_event_sender, web_2_event_receiver) = channel(100);
+    let (event_2_model_sender, event_2_model_receiver) = channel(100);
+    let (model_2_event_sender, model_2_event_receiver) = channel(100);
+    let event_channels = EventChannels {
+        model_rx: model_2_event_receiver,
+        event_model_tx: event_2_model_sender,
+        web_rx: web_2_event_receiver,
+        // to_web: to_event_from_web,
+    };
+
+    let model_channel = ModelChannel {
+        event_tx: model_2_event_sender,
+        event_rx: event_2_model_receiver,
+    };
+
+    let web_channels = WebChannels {
+        to_event: web_2_event_sender,
+    };
+
+    (web_channels, event_channels, model_channel)
+}
 
 #[tokio::main]
 async fn main() {
@@ -29,33 +57,33 @@ async fn main() {
 
     let addr = format!("{}:{}", address, port);
 
-    // create the event queues
-    let (to_event_from_model, from_model) = mpsc::channel(100);
-    let (to_model, from_event_to_model) = mpsc::channel(100);
+    let channels = create_channels();
 
-    let (to_event_from_web, from_web) = mpsc::channel(100);
-    let (to_web, from_event_to_web) = mpsc::channel(100);
+    let mut client = create_mqtt_client().await;
 
-    let event_channels = EventChannels {
-        to_web,
-        from_web,
-        to_model,
-        from_model,
-    };
+    let mqtt_manager = MqttIngressManager::new(&mut client, channels.0.to_event).await;
 
-    let event_manager = EventManager::new(event_channels).await;
+    let mut event_manager = EventManager::new(channels.1).await;
 
-    let model_channels = ModelChannel {
-        to_event: to_event_from_model,
-        from_event: from_event_to_model,
-    };
+    tokio::spawn(async move {
+        println!("Starting MQTT ingress manager");
+        if let Ok(mut mqtt_manager) = mqtt_manager {
+            mqtt_manager.run().await;
+        }
+    });
 
-    let app = match web::get_routes(model_channels).await {
+    tokio::spawn(async move {
+        println!("Starting event manager");
+        event_manager.run().await;
+    });
+
+    let app = match web::initalize_app(channels.2).await {
         Ok(app) => app,
         Err(e) => panic!("Failed to create routes: {}", e),
     };
 
-    let listener = tokio::net::TcpListener::bind(&addr).await
+    let listener = tokio::net::TcpListener::bind(&addr)
+        .await
         .expect("Failed to bind to address");
 
     match axum::serve(listener, app).await {

@@ -1,13 +1,11 @@
-// Import necessary crates and modules.
-mod mqtt;
-
 use tokio::sync::mpsc::{Receiver, Sender};
 
 pub struct EventChannels {
-    pub to_web: Sender<Event>,
-    pub from_web: Receiver<Event>,
-    pub to_model: Sender<Event>,
-    pub from_model: Receiver<Event>,
+    pub model_rx: Receiver<Event>,
+    pub event_model_tx: Sender<Event>,
+    
+    pub web_rx: Receiver<Event>,
+    // pub to_web: Sender<Event>,
 }
 
 pub struct EventManager {
@@ -16,49 +14,49 @@ pub struct EventManager {
 
 // Define the types of events we can handle. Currently, only MQTT events are considered.
 #[derive(Debug, Clone)]
-enum EventType {
+pub enum EventType {
     Mqtt,
 }
 
 // Struct to represent MQTT events with action, topic, and payload details.
 #[derive(Debug, Clone)]
-struct MqttEvent {
-    action: String,
-    topic: String,
-    payload: String,
+pub struct MqttEvent {
+    pub action: String,
+    pub topic: String,
+    // pub payload: String,
 }
 
 // General event struct that can be extended to include different types of events.
 #[derive(Debug, Clone)]
 pub struct Event {
-    event_type: EventType,
-    mqtt_event: Option<MqttEvent>,
+    pub event_type: EventType,
+    pub mqtt_event: Option<MqttEvent>,
 }
 
 impl EventManager {
     pub async fn new(channels: EventChannels) -> Self {
-        EventManager {
-            channels,
-        }
+        EventManager { channels }
     }
 
     pub async fn run(&mut self) {
         loop {
-            let event = self.channels.from_web.recv().await.unwrap();
+            let event = self.channels.web_rx.recv().await;
 
-            let future = match event.event_type {
-                EventType::Mqtt => {
-                    let mqtt_event = event.mqtt_event.unwrap();
-                    self.handle_mqtt_event(mqtt_event) // Await the future here.
+            match event {
+                Some(event) => match event.event_type {
+                    EventType::Mqtt => {
+                        let mqtt_event = event.mqtt_event.unwrap();
+                        self.handle_mqtt_event(mqtt_event).await;
+                    }
+                },
+                None => {
+                    continue;
                 }
             };
-
-            tokio::spawn(future);
         }
     }
 
-    async fn handle_mqtt_event(&mut self, event: MqttEvent) {
-        todo!()
+    async fn handle_mqtt_event(&self, event: MqttEvent) {
+        println!("Handling MQTT event: {:?}", event);
     }
-    
 }

@@ -3,20 +3,20 @@ mod error;
 pub use self::error::{Error, Result};
 
 mod guard;
-mod rpc;
+pub mod mqtt;
 mod routes;
+mod rpc;
 
-use crate::model::{ModelManager, ModelChannel};
+use crate::model::{ModelChannel, ModelManager};
 use routes::{clusters, login, logout};
 
+use axum::middleware;
 #[allow(unused_imports)]
 use axum::routing::{delete, get, post, put};
-use axum::middleware;
 use axum::Router;
 
-pub async fn get_routes(model_channel: ModelChannel) -> Result<Router> {
-
-    let mm = ModelManager::new(model_channel).await?;
+pub async fn initalize_app(model_channel: ModelChannel) -> Result<Router> {
+    let model_manager = ModelManager::new(model_channel).await?;
 
     let routes = axum::Router::new()
         .nest(
@@ -30,9 +30,12 @@ pub async fn get_routes(model_channel: ModelChannel) -> Result<Router> {
                 .route("/logout", post(logout::handler)),
         )
         .route("/rpc", post(rpc::rpc_handler))
-        .route_layer(middleware::from_fn_with_state(mm.clone(), guard::guard))
+        .route_layer(middleware::from_fn_with_state(
+            model_manager.clone(),
+            guard::guard,
+        ))
         .nest("/api", Router::new().route("/login", post(login::handler)))
-        .with_state(mm);
+        .with_state(model_manager);
 
     Ok(routes)
 }

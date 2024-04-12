@@ -1,12 +1,10 @@
+use crate::context::UserContext;
 #[allow(unused_imports)]
 use crate::model::error::{Error, Result};
-use crate::context::UserContext;
 use crate::model::ModelManager;
 
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-
-use paho_mqtt as mqtt;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AddDeviceRequest {
@@ -20,7 +18,6 @@ pub struct ClusterBMC {}
 pub struct GetClusterResponse {
     pub id: String,
     pub region: Option<String>,
- 
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
@@ -30,8 +27,10 @@ pub struct GetClusterDevicesResponse {
 }
 
 impl ClusterBMC {
-    pub async fn get_all(ctx: &UserContext, model: &ModelManager) -> Result<Vec<GetClusterResponse>> {
-
+    pub async fn get_all(
+        ctx: &UserContext,
+        model: &ModelManager,
+    ) -> Result<Vec<GetClusterResponse>> {
         let clusters = sqlx::query_as!(
             GetClusterResponse,
             r#"
@@ -48,7 +47,11 @@ impl ClusterBMC {
         Ok(clusters)
     }
 
-    pub async fn get(ctx: &UserContext, model: &ModelManager, id: &str) -> Result<GetClusterResponse> {
+    pub async fn get(
+        ctx: &UserContext,
+        model: &ModelManager,
+        id: &str,
+    ) -> Result<GetClusterResponse> {
         let cluster = sqlx::query_as!(
             GetClusterResponse,
             r#"
@@ -62,7 +65,7 @@ impl ClusterBMC {
         )
         .fetch_one(&model.db)
         .await?;
-    
+
         Ok(cluster)
     }
 
@@ -80,11 +83,15 @@ impl ClusterBMC {
         )
         .fetch_optional(&model.db)
         .await?;
-    
+
         Ok(cluster.is_some())
     }
 
-    pub async fn get_devices(ctx: &UserContext, model: &ModelManager, id: &str) -> Result<Vec<GetClusterDevicesResponse>> {
+    pub async fn get_devices(
+        ctx: &UserContext,
+        model: &ModelManager,
+        id: &str,
+    ) -> Result<Vec<GetClusterDevicesResponse>> {
         let devices = sqlx::query_as!(
             GetClusterDevicesResponse,
             r#"
@@ -99,7 +106,7 @@ impl ClusterBMC {
         )
         .fetch_all(&model.db)
         .await?;
-    
+
         Ok(devices)
     }
 
@@ -117,11 +124,15 @@ impl ClusterBMC {
     //         let topic = format!("cluster/{}/device/{}", id, device.id);
     //         res.push(topic.clone());
     //     }
-    
+
     //     Ok(res)
     // }
 
-    pub async fn add_device(ctx: &UserContext, model: &ModelManager, device: AddDeviceRequest) -> Result<()> {
+    pub async fn add_device(
+        ctx: &UserContext,
+        model: &ModelManager,
+        device: AddDeviceRequest,
+    ) -> Result<()> {
         let device_id = device.device_id;
         let cluster_id = device.cluster_id;
 
@@ -138,8 +149,7 @@ impl ClusterBMC {
         )
         .execute(&model.db)
         .await?;
-    
+
         Ok(())
     }
-    
 }

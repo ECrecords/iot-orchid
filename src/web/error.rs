@@ -1,5 +1,7 @@
 use crate::auth;
 use crate::model;
+use crate::web::mqtt;
+
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 
@@ -12,6 +14,8 @@ pub enum Error {
     LoginFailPwdNotMatch,
     LoginFailUserNotFound,
     CtxExtError(CtxExtError),
+    Mqtt(mqtt::Error),
+
 }
 
 #[derive(Clone, Debug)]
@@ -39,6 +43,12 @@ impl From<model::Error> for Error {
 impl From<auth::Error> for Error {
     fn from(err: auth::Error) -> Self {
         Error::AuthError(err)
+    }
+}
+
+impl From<mqtt::Error> for Error {
+    fn from(err: mqtt::Error) -> Self {
+        Error::Mqtt(err)
     }
 }
 
