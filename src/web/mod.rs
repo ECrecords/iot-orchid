@@ -16,6 +16,7 @@ use axum::routing::{delete, get, post, put};
 use axum::Router;
 
 pub async fn initalize_app(model_channel: ModelChannel) -> Result<Router> {
+
     let model_manager = ModelManager::new(model_channel).await?;
 
     let routes = axum::Router::new()

@@ -21,7 +21,6 @@ pub enum EventType {
 // Struct to represent MQTT events with action, topic, and payload details.
 #[derive(Debug, Clone)]
 pub struct MqttEvent {
-    pub action: String,
     pub topic: String,
     // pub payload: String,
 }
@@ -58,5 +57,10 @@ impl EventManager {
 
     async fn handle_mqtt_event(&self, event: MqttEvent) {
         println!("Handling MQTT event: {:?}", event);
+
+        self.channels.event_model_tx.send(Event {
+            event_type: EventType::Mqtt,
+            mqtt_event: Some(event),
+        }).await.unwrap();
     }
 }

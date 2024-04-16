@@ -45,7 +45,6 @@ impl MqttIngressManager {
                     let event = Event {
                         event_type: EventType::Mqtt,
                         mqtt_event: Some(MqttEvent {
-                            action: "message".to_string(),
                             topic,
                             // payload,
                         }),

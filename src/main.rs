@@ -76,8 +76,9 @@ async fn main() {
         println!("Starting event manager");
         event_manager.run().await;
     });
+    
 
-    let app = match web::initalize_app(channels.2).await {
+    let app = match web::initalize_app(client, channels.2).await {
         Ok(app) => app,
         Err(e) => panic!("Failed to create routes: {}", e),
     };
