@@ -7,7 +7,7 @@ pub mod mqtt;
 mod routes;
 mod rpc;
 
-use crate::model::{ModelChannel, ModelManager};
+use crate::model::ModelManager;
 use routes::{clusters, login, logout};
 
 use axum::middleware;
@@ -15,9 +15,9 @@ use axum::middleware;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 
-pub async fn initalize_app(model_channel: ModelChannel) -> Result<Router> {
+pub async fn initalize_app() -> Result<Router> {
 
-    let model_manager = ModelManager::new(model_channel).await?;
+    let model_manager = ModelManager::new().await?;
 
     let routes = axum::Router::new()
         .nest(
