@@ -7,8 +7,6 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-const rest
-
 func failOnError(err error, msg string) {
 	if err != nil {
 		log.Fatalf("%s: %s", msg, err)

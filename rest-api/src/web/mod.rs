@@ -3,11 +3,11 @@ mod error;
 pub use self::error::{Error, Result};
 
 mod guard;
-pub mod mqtt;
 mod routes;
 mod rpc;
 
 use crate::model::ModelManager;
+use amqprs::connection::Connection;
 use routes::{clusters, login, logout};
 
 use axum::middleware;
@@ -15,9 +15,9 @@ use axum::middleware;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
 
-pub async fn initalize_app() -> Result<Router> {
+pub async fn initalize_app(conn: &Connection) -> Result<Router> {
 
-    let model_manager = ModelManager::new().await?;
+    let model_manager = ModelManager::new(conn).await?;
 
     let routes = axum::Router::new()
         .nest(
