@@ -3,6 +3,7 @@ use crate::context::UserContext;
 use crate::model::error::{Error, Result};
 use crate::model::ModelManager;
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -14,16 +15,25 @@ pub struct AddDeviceRequest {
 
 pub struct ClusterBMC {}
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, FromRow)]
 pub struct GetClusterResponse {
     pub id: String,
     pub region: Option<String>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub last_accessed: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct GetClusterDevicesResponse {
     pub id: String,
-    // pub last_seen: Option<sqlx::types::chrono::NaiveDateTime>,
+    pub device_type: Option<String>,
+    pub firmware_version: Option<String>,
+    pub serial_number: Option<String>,
+    pub last_seen: Option<sqlx::types::chrono::NaiveDateTime>,
+    pub connection_status: Option<String>,
+    // pub ip_address: Option<String>,
+    // pub battery_level: Option<i32>,
+    // pub temperature: Option<f64>,
 }
 
 impl ClusterBMC {
@@ -34,7 +44,7 @@ impl ClusterBMC {
         let clusters = sqlx::query_as!(
             GetClusterResponse,
             r#"
-            SELECT clusters.id, clusters.region
+            SELECT clusters.id, clusters.region, clusters.created_at, clusters.last_accessed
             FROM clusters
             JOIN user_clusters ON clusters.id = user_clusters.cluster_id
             WHERE user_clusters.user_id = $1
@@ -55,7 +65,7 @@ impl ClusterBMC {
         let cluster = sqlx::query_as!(
             GetClusterResponse,
             r#"
-            SELECT clusters.id, clusters.region
+            SELECT clusters.id, clusters.region, clusters.created_at, clusters.last_accessed
             FROM clusters
             JOIN user_clusters ON clusters.id = user_clusters.cluster_id
             WHERE user_clusters.user_id = $1 AND clusters.id = $2
@@ -95,11 +105,21 @@ impl ClusterBMC {
         let devices = sqlx::query_as!(
             GetClusterDevicesResponse,
             r#"
-            SELECT cluster_devices.id
-            FROM cluster_devices
-            JOIN clusters ON cluster_devices.cluster_id = clusters.id
-            JOIN user_clusters ON clusters.id = user_clusters.cluster_id
-            WHERE user_clusters.user_id = $1 AND clusters.id = $2
+            SELECT 
+                cluster_devices.id, 
+                cluster_devices.device_type, 
+                cluster_devices.firmware_version, 
+                cluster_devices.serial_number, 
+                cluster_devices.last_seen, 
+                cluster_devices.connection_status
+            FROM 
+                cluster_devices
+            JOIN 
+                clusters ON cluster_devices.cluster_id = clusters.id
+            JOIN 
+                user_clusters ON clusters.id = user_clusters.cluster_id
+            WHERE 
+                user_clusters.user_id = $1 AND clusters.id = $2
             "#,
             ctx.username(),
             id

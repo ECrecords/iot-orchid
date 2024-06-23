@@ -8,12 +8,13 @@ mod rpc;
 
 use crate::model::ModelManager;
 use amqprs::connection::Connection;
-use routes::{clusters, login, logout};
+use routes::{clusters, login, logout, devices};
 
 use axum::middleware;
 #[allow(unused_imports)]
 use axum::routing::{delete, get, post, put};
 use axum::Router;
+
 
 pub async fn initalize_app(conn: &Connection) -> Result<Router> {
 
@@ -23,6 +24,7 @@ pub async fn initalize_app(conn: &Connection) -> Result<Router> {
         .nest(
             "/api",
             Router::new()
+                .route("/devices/:cluser_id/:device_id", post(devices::create_device))
                 .route("/clusters", post(clusters::create_cluster))
                 .route("/clusters/:id/devices", post(clusters::add_device))
                 .route("/clusters/:id", get(clusters::get_cluster))
