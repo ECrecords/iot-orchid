@@ -6,7 +6,6 @@ mod web;
 use tokio;
 use amqprs::{
     callbacks,
-    security::SecurityCredentials,
     connection::{OpenConnectionArguments, Connection},
 };
 
