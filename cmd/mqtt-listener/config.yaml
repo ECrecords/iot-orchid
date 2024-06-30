@@ -1,0 +1,11 @@
+mqtt:
+  url: "tcp://mqtt:1883"
+  client_id: "registration-request-mqtt-bridge-ingress"
+  topic:
+    mqtt/register: 0
+    mqtt/heartbeat: 0
+    mqtt/telemetry: 0
+    mqtt/command: 0
+amqp:
+  url: "amqp://guest:guest@rabbitmq:5672"
+  worker_queue: "registration-requests"

@@ -1,6 +1,8 @@
 package mqtt
 
 import (
+	"fmt"
+
 	ampq "github.com/rabbitmq/amqp091-go"
 )
 
@@ -13,7 +15,9 @@ type Consumer struct {
 func NewConsumer(amqpURL string, amqpQueueName string) (*Consumer, error) {
 	c := &Consumer{}
 
-	c.createWorkerQueue(amqpURL, amqpQueueName)
+	if err := c.createWorkerQueue(amqpURL, amqpQueueName); err != nil {
+		return nil, fmt.Errorf("failed to create worker queue: %v", err)
+	}
 
 	return c, nil
 }
@@ -49,6 +53,11 @@ func (c *Consumer) createWorkerQueue(amqpURL, queueName string) error {
 }
 
 func (c *Consumer) Consume() (<-chan ampq.Delivery, error) {
+
+	if c.ampqCh == nil {
+		return nil, fmt.Errorf("channel is nil")
+	}
+
 	return c.ampqCh.Consume(
 		c.ampqQ.Name,
 		"",

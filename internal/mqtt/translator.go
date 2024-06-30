@@ -2,33 +2,33 @@ package mqtt
 
 import (
 	"fmt"
-
+	"log/slog"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Translator struct {
-	amqpConn   *amqp.Connection
-	amqpCh     *amqp.Channel
-	amqpQ      amqp.Queue
-	mqttClient mqtt.Client
+	amqpConn         *amqp.Connection
+	amqpCh           *amqp.Channel
+	amqpQ            amqp.Queue
+	mqttClient       mqtt.Client
 	mqttMsgProcessor MqttMsgProcessor
-	}
-	
-	type MqttMsgProcessor func(mqtt.Message) []byte
-	
-	func NewTranslator(
-		amqpURL string,
-		amqpQueueName string,
-		mqttBrokerURL string,
-		mqttClientID string,
-		) (*Translator, error) {
-			
-			t := &Translator{}
-			
-			t.createWorkerQueue(amqpURL, amqpQueueName)
-			
-			// Translates messages received via specified MQTT topics to a AMQP worker queue
+}
+
+type MqttMsgProcessor func(mqtt.Message) []byte
+
+func NewTranslator(
+	amqpURL string,
+	amqpQueueName string,
+	mqttBrokerURL string,
+	mqttClientID string,
+) (*Translator, error) {
+
+	t := &Translator{}
+
+	t.createWorkerQueue(amqpURL, amqpQueueName)
+
+	// Translates messages received via specified MQTT topics to a AMQP worker queue
 	t.createMqttClient(mqttBrokerURL, mqttClientID)
 
 	return t, nil
@@ -67,13 +67,13 @@ func (t *Translator) createWorkerQueue(amqpUrl, queueName string) error {
 	return nil
 }
 
-
 func (t *Translator) createMqttClient(mqttURL, clientID string) error {
 
 	opts := mqtt.NewClientOptions().AddBroker(mqttURL).SetClientID(clientID)
 	t.mqttClient = mqtt.NewClient(opts)
 
 	if token := t.mqttClient.Connect(); token.Wait() && token.Error() != nil {
+		slog.Error("Failed to connect to MQTT broker: %s", token.Error())
 		return token.Error()
 	}
 
@@ -104,6 +104,7 @@ func (t *Translator) Subscribe(topics map[string]byte) error {
 
 	for key, qos := range topics {
 		if token := t.mqttClient.Subscribe(key, qos, t.messageHandler); token.Wait() && token.Error() != nil {
+			slog.Error("Failed to subscribe to topic %s: %s", key, token.Error())
 			return token.Error()
 		}
 	}

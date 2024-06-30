@@ -1,21 +1,21 @@
 version: '3'
 services:
-  api:
-    image: ecrecords/iot-orchid:v0.1-alpha
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432"
-      IOT_ORCHID_PORT: ${IOT_ORCHID_PORT}
-      IOT_ORCHID_ADDRESS: ${IOT_ORCHID_ADDRESS}
-      JWT_SECRET: ${JWT_SECRET}
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    depends_on:
-      - db
-      - mqtt
+  # api:
+  #   image: ecrecords/iot-orchid:v0.1-alpha
+  #   restart: unless-stopped
+  #   environment:
+  #     DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432"
+  #     IOT_ORCHID_PORT: ${IOT_ORCHID_PORT}
+  #     IOT_ORCHID_ADDRESS: ${IOT_ORCHID_ADDRESS}
+  #     JWT_SECRET: ${JWT_SECRET}
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - db
+  #     - mqtt
 
   db:
     image: postgres:15.2-alpine
@@ -35,6 +35,8 @@ services:
       - "1883:1883"
     volumes:
       - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - iot-orchid-network
 
   rabbitmq:
     image: rabbitmq:3.13-management
@@ -43,23 +45,46 @@ services:
       - "5672:5672"
       - "15672:15672"
 
+    networks:
+      - iot-orchid-network
+
   registration-handler:
-    image: ecrecords/iot-orchid-registration:v0.1-alpha
     restart: unless-stopped
-    environment:
-      DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432"
-      IOT_ORCHID_PORT: ${IOT_ORCHID_PORT}
-      IOT_ORCHID_ADDRESS: ${IOT_ORCHID_ADDRESS}
-      JWT_SECRET: ${JWT_SECRET}
     build:
       context: .
-      dockerfile: cmd/registration-handler/Dockerfile
-    ports:
-      - "3001:3001"
+      dockerfile: Dockerfile
+      target: runtime-registration-handler
+    environment:
+      - AMQP_URI=amqp://guest:guest@rabbitmq:5672
+      - QUEUE_NAME=registration-requests
+    networks:
+      - iot-orchid-network
+    deploy:
+      replicas: 4
     depends_on:
-      - db
+      - rabbitmq
+      - mqtt
+
+  registration-listener:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime-registration-listener
+    environment:
+      - AMPQ_URI=amqp://guest:guest@rabbitmq:5672
+      - MQTT_URI=tcp://mqtt:1883
+    networks:
+      - iot-orchid-network
+    depends_on:
+      - rabbitmq
+      - mqtt 
+      
 
 volumes:
   db:
-    driver: local
+  
+networks:
+  iot-orchid-network:
+    driver: bridge
 
