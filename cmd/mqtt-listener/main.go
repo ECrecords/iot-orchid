@@ -1,8 +1,8 @@
 package main
 
 import (
+	// "log/slog"
 	"fmt"
-
 	mqttBridge "github.com/ECrecords/iot-orchid/internal/mqtt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	viper "github.com/spf13/viper"
