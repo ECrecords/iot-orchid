@@ -16,16 +16,23 @@ INSERT INTO user_clusters (user_id, cluster_id) VALUES
     ('user-b', 'factory-b'),
     ('user-c', 'factory-c');
 
-INSERT INTO  cluster_devices (id, cluster_id, last_seen) VALUES
-    ('device-a1', 'factory-a', NOW()),
-    ('device-a2', 'factory-a', NOW()),
-    ('device-a3', 'factory-a', NOW()),
-    ('device-a4', 'factory-a', NOW()),
-    ('device-b1', 'factory-b', NOW()),
-    ('device-b2', 'factory-b', NOW()),
-    ('device-b3', 'factory-b', NOW()),
-    ('device-b4', 'factory-b', NOW()),
-    ('device-c1', 'factory-c', NOW()),
-    ('device-c2', 'factory-c', NOW()),
-    ('device-c3', 'factory-c', NOW()),
-    ('device-c4', 'factory-c', NOW());
+INSERT INTO  cluster_devices (id, cluster_id) VALUES
+    ('3ebd5fd0-66f8-4aab-850d-7e9d99e97a1e', 'factory-a'),
+    ('device-a1', 'factory-a'),
+    ('device-a2', 'factory-a'),
+    ('device-a3', 'factory-a'),
+    ('device-a4', 'factory-a'),
+    ('device-b1', 'factory-b'),
+    ('device-b2', 'factory-b'),
+    ('device-b3', 'factory-b'),
+    ('device-b4', 'factory-b'),
+    ('device-c1', 'factory-c'),
+    ('device-c2', 'factory-c'),
+    ('device-c3', 'factory-c'),
+    ('device-c4', 'factory-c');
+
+INSERT INTO device_topics (device_id, category, topic ) VALUES
+    ('3ebd5fd0-66f8-4aab-850d-7e9d99e97a1e', 'status', 'led'),
+    ('3ebd5fd0-66f8-4aab-850d-7e9d99e97a1e', 'status', 'temperature'),
+    ('3ebd5fd0-66f8-4aab-850d-7e9d99e97a1e', 'control', 'led'),
+    ('3ebd5fd0-66f8-4aab-850d-7e9d99e97a1e', 'control', 'temperature');
